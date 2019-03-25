@@ -25,10 +25,36 @@ export class Source implements pitometer.ISource {
     this.dynatraceApi = new Dynatrace(config);
   }
 
-  async fetch(query): Promise<number | boolean> {
+  async queryTimeseries(query): Promise<number | boolean> {
+    const params = this.getParams(query);
+
+    params.queryMode = 'TOTAL';
+    const timeseries = await this.dynatraceApi.timeseries(query.timeseriesId, params);
+
+    const values = Object.values(timeseries.spec.dataPoints);
+    if (!values.length) return false;
+    return values[0][0][1];
+  }
+  async querySmartscape(query): Promise<number | boolean> {
+    const params = this.getParams(query);
+
+    let entities: any = [];
+
+    if (query.entityType === 'Service') {
+      entities = await this.dynatraceApi.services(params);
+    } else if (query.entityType === 'Application') {
+      entities = await this.dynatraceApi.applications(params);
+    } else if (query.entityType === 'Process') {
+      entities = await this.dynatraceApi.processes(params);
+    }
+
+    console.log(entities[0].spec);
+
+    return false;
+  }
+
+  private getParams(query): any {
     const params: any = {};
-    // Only timeseries for now
-    if (!query.timeseriesId) return false;
     const percentile = /p(\d+)/;
     const percentileMatch = query.aggregation.match(percentile);
     if (percentileMatch) {
@@ -40,11 +66,18 @@ export class Source implements pitometer.ISource {
     params.relativeTime = 'day';
     params.entities = query.entityIds;
     params.tags = query.tags;
-    params.queryMode = 'TOTAL';
-    const timeseries = await this.dynatraceApi.timeseries(query.timeseriesId, params);
+    return params;
+  }
 
-    const values = Object.values(timeseries.spec.dataPoints);
-    if (!values.length) return false;
-    return values[0][0][1];
+  async fetch(query): Promise<number | boolean> {
+    if (query.timeseriesId) {
+      return this.queryTimeseries(query);
+    }
+
+    if (query.smartscape) {
+      return this.querySmartscape(query);
+    }
+
+    return false;
   }
 }

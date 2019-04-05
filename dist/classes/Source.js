@@ -77,7 +77,6 @@ class Source {
         else {
             params.relativeTime = 'day';
         }
-        params.relativeTime = 'day';
         params.entities = query.entityIds;
         params.tags = query.tags;
         return params;

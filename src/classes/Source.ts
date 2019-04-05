@@ -63,6 +63,16 @@ export class Source implements pitometer.ISource {
     } else {
       params.aggregationType = query.aggregation;
     }
+
+    if (query.relativeTime) {
+      params.relativeTime = query.relativeTime;
+    } else if (query.startTimestamp && query.endTimestamp) {
+      params.startTimestamp = query.startTimestamp;
+      params.endTimestamp = query.endTimestamp;
+    } else {
+      params.relativeTime = 'day';
+    }
+
     params.relativeTime = 'day';
     params.entities = query.entityIds;
     params.tags = query.tags;

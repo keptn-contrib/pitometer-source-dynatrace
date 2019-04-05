@@ -10,7 +10,7 @@
     "outDir": "dist",
     "baseUrl": ".",
     "types": [
-      "node",
+      "node"
     ],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
@@ -23,7 +23,7 @@
       ]
     },
     "lib": [
-      "es6",
+      "es6"
     ]
   },
   "include": [

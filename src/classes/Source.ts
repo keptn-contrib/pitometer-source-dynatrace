@@ -57,8 +57,6 @@ export class Source implements pitometer.ISource {
       entities = await this.dynatraceApi.processes(params);
     }
 
-    // console.log(entities[0].spec);
-
     return false;
   }
 

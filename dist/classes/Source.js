@@ -57,7 +57,6 @@ class Source {
             else if (query.entityType === 'Process') {
                 entities = yield this.dynatraceApi.processes(params);
             }
-            // console.log(entities[0].spec);
             return false;
         });
     }

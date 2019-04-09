@@ -20,9 +20,18 @@ import { Dynatrace, IDynatraceOptions } from '@dynatrace/api-client';
 export class Source implements pitometer.ISource {
 
   private dynatraceApi;
+  private timeStart: number;
+  private timeEnd: number;
+  private context: string;
 
   constructor(config: IDynatraceOptions) {
     this.dynatraceApi = new Dynatrace(config);
+  }
+
+  public setOptions(options: pitometer.IOptions) {
+    this.timeStart = options.timeStart;
+    this.timeEnd = options.timeEnd;
+    this.context = options.context;
   }
 
   async queryTimeseries(query): Promise<number | boolean> {
@@ -64,14 +73,8 @@ export class Source implements pitometer.ISource {
       params.aggregationType = query.aggregation;
     }
 
-    if (query.relativeTime) {
-      params.relativeTime = query.relativeTime;
-    } else if (query.startTimestamp && query.endTimestamp) {
-      params.startTimestamp = query.startTimestamp;
-      params.endTimestamp = query.endTimestamp;
-    } else {
-      params.relativeTime = 'day';
-    }
+    params.startTimestamp = this.timeStart * 1000;
+    params.endTimestamp = this.timeEnd * 1000;
 
     params.entities = query.entityIds;
     params.tags = query.tags;

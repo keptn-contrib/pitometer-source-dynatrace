@@ -28,6 +28,11 @@ class Source {
     constructor(config) {
         this.dynatraceApi = new api_client_1.Dynatrace(config);
     }
+    setOptions(options) {
+        this.timeStart = options.timeStart;
+        this.timeEnd = options.timeEnd;
+        this.context = options.context;
+    }
     queryTimeseries(query) {
         return __awaiter(this, void 0, void 0, function* () {
             const params = this.getParams(query);
@@ -67,16 +72,8 @@ class Source {
         else {
             params.aggregationType = query.aggregation;
         }
-        if (query.relativeTime) {
-            params.relativeTime = query.relativeTime;
-        }
-        else if (query.startTimestamp && query.endTimestamp) {
-            params.startTimestamp = query.startTimestamp;
-            params.endTimestamp = query.endTimestamp;
-        }
-        else {
-            params.relativeTime = 'day';
-        }
+        params.startTimestamp = this.timeStart * 1000;
+        params.endTimestamp = this.timeEnd * 1000;
         params.entities = query.entityIds;
         params.tags = query.tags;
         return params;

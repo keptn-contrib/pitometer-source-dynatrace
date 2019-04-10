@@ -22,8 +22,8 @@ export declare class Source implements pitometer.ISource {
     private context;
     constructor(config: IDynatraceOptions);
     setOptions(options: pitometer.IOptions): void;
-    queryTimeseries(query: any): Promise<number | boolean>;
-    querySmartscape(query: any): Promise<number | boolean>;
+    queryTimeseries(query: any): Promise<pitometer.ISourceResult[] | boolean>;
+    querySmartscape(query: any): Promise<pitometer.ISourceResult[] | boolean>;
     private getParams;
-    fetch(query: any): Promise<number | boolean>;
+    fetch(query: any): Promise<pitometer.ISourceResult[] | boolean>;
 }

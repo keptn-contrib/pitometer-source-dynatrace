@@ -41,7 +41,16 @@ class Source {
             const values = Object.values(timeseries.spec.dataPoints);
             if (!values.length)
                 return false;
-            return values[0][0][1];
+            const clean = Object.keys(timeseries.spec.dataPoints).map((key) => {
+                const entry = timeseries.spec.dataPoints[key];
+                const value = entry[0];
+                return {
+                    key,
+                    timestamp: value[0],
+                    value: value[1],
+                };
+            });
+            return clean;
         });
     }
     querySmartscape(query) {
@@ -57,7 +66,24 @@ class Source {
             else if (query.entityType === 'Process') {
                 entities = yield this.dynatraceApi.processes(params);
             }
-            return false;
+            const result = entities.map((entity) => {
+                const key = entity.spec.entityId;
+                const timestamp = entity.spec.lastSeenTimestamp;
+                const querypart = query.smartscape.split(':');
+                const relation = querypart[0];
+                const metric = querypart[1];
+                if (query.aggregation === 'count') {
+                    const value = entity[relation] && entity[relation][metric] ?
+                        entity[relation][metric].length : false;
+                    return {
+                        key,
+                        timestamp,
+                        value,
+                    };
+                }
+                throw new Error(`Unsupported aggregation for smartscape: ${query.aggregation}`);
+            });
+            return result;
         });
     }
     getParams(query) {

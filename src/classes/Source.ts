@@ -16,6 +16,7 @@
 
 import * as pitometer from 'pitometer';
 import { Dynatrace, IDynatraceOptions } from '@dynatrace/api-client';
+import { ENOENT } from 'constants';
 
 export class Source implements pitometer.ISource {
 
@@ -34,17 +35,28 @@ export class Source implements pitometer.ISource {
     this.context = options.context;
   }
 
-  async queryTimeseries(query): Promise<number | boolean> {
+  async queryTimeseries(query): Promise<pitometer.ISourceResult[] | boolean> {
     const params = this.getParams(query);
 
     params.queryMode = 'TOTAL';
     const timeseries = await this.dynatraceApi.timeseries(query.timeseriesId, params);
-
     const values = Object.values(timeseries.spec.dataPoints);
     if (!values.length) return false;
-    return values[0][0][1];
+
+    const clean = Object.keys(timeseries.spec.dataPoints).map((key) => {
+      const entry = timeseries.spec.dataPoints[key];
+      const value = entry[0];
+      return {
+        key,
+        timestamp: value[0],
+        value: value[1],
+      };
+    });
+
+    return clean;
   }
-  async querySmartscape(query): Promise<number | boolean> {
+
+  async querySmartscape(query): Promise<pitometer.ISourceResult[] | boolean> {
     const params = this.getParams(query);
 
     let entities: any = [];
@@ -57,7 +69,25 @@ export class Source implements pitometer.ISource {
       entities = await this.dynatraceApi.processes(params);
     }
 
-    return false;
+    const result = entities.map((entity) => {
+      const key = entity.spec.entityId;
+      const timestamp = entity.spec.lastSeenTimestamp;
+      const querypart = query.smartscape.split(':');
+      const relation = querypart[0];
+      const metric = querypart[1];
+
+      if (query.aggregation === 'count') {
+        const value = entity[relation] && entity[relation][metric] ?
+          entity[relation][metric].length : false;
+        return {
+          key,
+          timestamp,
+          value,
+        };
+      }
+      throw new Error(`Unsupported aggregation for smartscape: ${query.aggregation}`);
+    });
+    return result;
   }
 
   private getParams(query): any {
@@ -79,7 +109,7 @@ export class Source implements pitometer.ISource {
     return params;
   }
 
-  async fetch(query): Promise<number | boolean> {
+  async fetch(query): Promise<pitometer.ISourceResult[] | boolean> {
     if (query.timeseriesId) {
       return this.queryTimeseries(query);
     }

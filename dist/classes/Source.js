@@ -39,8 +39,9 @@ class Source {
             params.queryMode = 'TOTAL';
             const timeseries = yield this.dynatraceApi.timeseries(query.timeseriesId, params);
             const values = Object.values(timeseries.spec.dataPoints);
-            if (!values.length)
+            if (!values.length) {
                 return false;
+            }
             const clean = Object.keys(timeseries.spec.dataPoints).map((key) => {
                 const entry = timeseries.spec.dataPoints[key];
                 const value = entry[0];

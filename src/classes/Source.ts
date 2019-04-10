@@ -41,7 +41,9 @@ export class Source implements pitometer.ISource {
     params.queryMode = 'TOTAL';
     const timeseries = await this.dynatraceApi.timeseries(query.timeseriesId, params);
     const values = Object.values(timeseries.spec.dataPoints);
-    if (!values.length) return false;
+    if (!values.length) {
+      return false;
+    }
 
     const clean = Object.keys(timeseries.spec.dataPoints).map((key) => {
       const entry = timeseries.spec.dataPoints[key];

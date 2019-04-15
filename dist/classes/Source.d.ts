@@ -17,9 +17,13 @@ import * as pitometer from 'pitometer';
 import { IDynatraceOptions } from '@dynatrace/api-client';
 export declare class Source implements pitometer.ISource {
     private dynatraceApi;
+    private timeStart;
+    private timeEnd;
+    private context;
     constructor(config: IDynatraceOptions);
-    queryTimeseries(query: any): Promise<number | boolean>;
-    querySmartscape(query: any): Promise<number | boolean>;
+    setOptions(options: pitometer.IOptions): void;
+    queryTimeseries(query: any): Promise<pitometer.ISourceResult[] | boolean>;
+    querySmartscape(query: any): Promise<pitometer.ISourceResult[] | boolean>;
     private getParams;
-    fetch(query: any): Promise<number | boolean>;
+    fetch(query: any): Promise<pitometer.ISourceResult[] | boolean>;
 }

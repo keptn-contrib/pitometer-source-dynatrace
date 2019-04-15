@@ -16,26 +16,49 @@
 
 import * as pitometer from 'pitometer';
 import { Dynatrace, IDynatraceOptions } from '@dynatrace/api-client';
+import { ENOENT } from 'constants';
 
 export class Source implements pitometer.ISource {
 
   private dynatraceApi;
+  private timeStart: number;
+  private timeEnd: number;
+  private context: string;
 
   constructor(config: IDynatraceOptions) {
     this.dynatraceApi = new Dynatrace(config);
   }
 
-  async queryTimeseries(query): Promise<number | boolean> {
+  public setOptions(options: pitometer.IOptions) {
+    this.timeStart = options.timeStart;
+    this.timeEnd = options.timeEnd;
+    this.context = options.context;
+  }
+
+  async queryTimeseries(query): Promise<pitometer.ISourceResult[] | boolean> {
     const params = this.getParams(query);
 
     params.queryMode = 'TOTAL';
     const timeseries = await this.dynatraceApi.timeseries(query.timeseriesId, params);
-
     const values = Object.values(timeseries.spec.dataPoints);
-    if (!values.length) return false;
-    return values[0][0][1];
+    if (!values.length) {
+      return false;
+    }
+
+    const clean = Object.keys(timeseries.spec.dataPoints).map((key) => {
+      const entry = timeseries.spec.dataPoints[key];
+      const value = entry[0];
+      return {
+        key,
+        timestamp: value[0],
+        value: value[1],
+      };
+    });
+
+    return clean;
   }
-  async querySmartscape(query): Promise<number | boolean> {
+
+  async querySmartscape(query): Promise<pitometer.ISourceResult[] | boolean> {
     const params = this.getParams(query);
 
     let entities: any = [];
@@ -48,9 +71,25 @@ export class Source implements pitometer.ISource {
       entities = await this.dynatraceApi.processes(params);
     }
 
-    // console.log(entities[0].spec);
+    const result = entities.map((entity) => {
+      const key = entity.spec.entityId;
+      const timestamp = entity.spec.lastSeenTimestamp;
+      const querypart = query.smartscape.split(':');
+      const relation = querypart[0];
+      const metric = querypart[1];
 
-    return false;
+      if (query.aggregation === 'count') {
+        const value = entity[relation] && entity[relation][metric] ?
+          entity[relation][metric].length : false;
+        return {
+          key,
+          timestamp,
+          value,
+        };
+      }
+      throw new Error(`Unsupported aggregation for smartscape: ${query.aggregation}`);
+    });
+    return result;
   }
 
   private getParams(query): any {
@@ -64,21 +103,15 @@ export class Source implements pitometer.ISource {
       params.aggregationType = query.aggregation;
     }
 
-    if (query.relativeTime) {
-      params.relativeTime = query.relativeTime;
-    } else if (query.startTimestamp && query.endTimestamp) {
-      params.startTimestamp = query.startTimestamp;
-      params.endTimestamp = query.endTimestamp;
-    } else {
-      params.relativeTime = 'day';
-    }
+    params.startTimestamp = this.timeStart * 1000;
+    params.endTimestamp = this.timeEnd * 1000;
 
     params.entities = query.entityIds;
     params.tags = query.tags;
     return params;
   }
 
-  async fetch(query): Promise<number | boolean> {
+  async fetch(query): Promise<pitometer.ISourceResult[] | boolean> {
     if (query.timeseriesId) {
       return this.queryTimeseries(query);
     }

@@ -1,5 +1,5 @@
 {
-  "name": "@keptn/source-dynatrace",
+  "name": "@keptn/pitometer-source-dynatrace",
   "version": "1.0.0",
   "description": "",
   "main": "./dist/index.js",

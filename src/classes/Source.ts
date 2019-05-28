@@ -82,7 +82,7 @@ export class Source implements pitometer.ISource {
 
       if (query.aggregation === 'count') {
         const value = entity[relation] && entity[relation][metric] ?
-          entity[relation][metric].length : false;
+          entity[relation][metric].length : 0;
         return {
           key,
           timestamp,

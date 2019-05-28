@@ -35,19 +35,21 @@ export class Source implements pitometer.ISource {
     this.context = options.context;
   }
 
-  async queryTimeseries(query): Promise<pitometer.ISourceResult[] | boolean> {
+  async queryTimeseries(query): Promise<pitometer.ISourceResult[]> {
     const params = this.getParams(query);
 
     params.queryMode = 'TOTAL';
     const timeseries = await this.dynatraceApi.timeseries(query.timeseriesId, params);
     const values = Object.values(timeseries.spec.dataPoints);
     if (!values.length) {
-      return false;
+      const result: pitometer.ISourceResult[] = [];
+      return result;
     }
 
     const clean = Object.keys(timeseries.spec.dataPoints).map((key) => {
       const entry = timeseries.spec.dataPoints[key];
       const value = entry[0];
+
       return {
         key,
         timestamp: value[0],
@@ -58,7 +60,7 @@ export class Source implements pitometer.ISource {
     return clean;
   }
 
-  async querySmartscape(query): Promise<pitometer.ISourceResult[] | boolean> {
+  async querySmartscape(query): Promise<pitometer.ISourceResult[]> {
     const params = this.getParams(query);
 
     let entities: any = [];
@@ -80,7 +82,7 @@ export class Source implements pitometer.ISource {
 
       if (query.aggregation === 'count') {
         const value = entity[relation] && entity[relation][metric] ?
-          entity[relation][metric].length : false;
+          entity[relation][metric].length : 0;
         return {
           key,
           timestamp,
@@ -111,7 +113,7 @@ export class Source implements pitometer.ISource {
     return params;
   }
 
-  async fetch(query): Promise<pitometer.ISourceResult[] | boolean> {
+  async fetch(query): Promise<pitometer.ISourceResult[]> {
     if (query.timeseriesId) {
       return this.queryTimeseries(query);
     }
@@ -120,6 +122,6 @@ export class Source implements pitometer.ISource {
       return this.querySmartscape(query);
     }
 
-    return false;
+    throw new Error('Unsupported query type');
   }
 }

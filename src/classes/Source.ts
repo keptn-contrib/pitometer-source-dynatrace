@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import * as pitometer from 'pitometer';
+import * as pitometer from '@keptn/pitometer';
 import { Dynatrace, IDynatraceOptions } from '@dynatrace/api-client';
 import { ENOENT } from 'constants';
 

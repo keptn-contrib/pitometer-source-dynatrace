@@ -1,6 +1,6 @@
 {
   "name": "@keptn/pitometer-source-dynatrace",
-  "version": "1.1.0",
+  "version": "1.0.1",
   "description": "",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -13,13 +13,13 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@types/node": "^11.11.1",
-    "pitometer": "file:../pitometer",
     "redis": "^2.8.0",
     "tslint": "^5.13.1",
     "tslint-config-airbnb": "^5.11.1",
     "typescript": "^3.3.3333"
   },
   "dependencies": {
-    "@dynatrace/api-client": "^2.7.0"
+    "@dynatrace/api-client": "^2.7.0",
+    "@keptn/pitometer": "^1.0.4"
   }
 }
